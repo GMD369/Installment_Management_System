@@ -45,7 +45,7 @@ export default function EditCustomer({ id, onCancel, onSaved }) {
         Object.keys(form).forEach((k) => fd.append(k, form[k] ?? ""));
         fd.append("document", documentFile);
         console.log("Updating as FormData (with file)");
-        await updateCustomer(id, fd);
+        await updateCustomer(id, fd,true);
       } else {
         const payload = { ...form };
         console.log("Updating as JSON payload", payload);
