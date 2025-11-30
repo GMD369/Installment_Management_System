@@ -1,112 +1,105 @@
 import React, { useEffect, useState } from "react";
-import AddCustomer from "./AddCustomer";
-import EditCustomer from "./EditCustomer";
-import CustomerDetailsModal from "./CustomerDetailsModal";
-import { getCustomers, deleteCustomer } from "../../api/customers";
+import AddProduct from "./AddProduct";
+import EditProduct from "./EditProduct";
+import ProductDetailsModal from "./ProductDetailsModal";
+import {
+  getAllProducts,
+  deleteProduct
+} from "../../api/product";
 
-export default function CustomerList() {
-  const [customers, setCustomers] = useState([]);
+export default function ProductList() {
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
 
-  const [showDetailsId, setShowDetailsId] = useState(null); // NEW STATE
-
-  const fetchCustomers = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
     try {
-      const data = await getCustomers();
-      console.log("getCustomers response:", data);
-      setCustomers(data?.customers || data || []);
+      const data = await getAllProducts();
+      console.log("getAllProducts response:", data);
+      setProducts(data || []);
     } catch (err) {
-      alert(err.message || "Failed to load customers");
+      alert(err.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
+    fetchProducts();
   }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this customer?")) return;
+    if (!confirm("Delete this product?")) return;
+
     try {
-      await deleteCustomer(id);
-      setCustomers((prev) =>
-        prev.filter((c) => (c.id || c._id) !== id)
-      );
+      await deleteProduct(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      alert(err.message || "Failed to delete");
+      alert(err.message || "Failed to delete product");
     }
   };
 
-  const openDetails = (id) => {
-    setShowDetailsId(id);
-  };
+  const openDetails = (id) => setDetailsId(id);
 
   return (
     <div className="max-w-7xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Products</h1>
 
         <button
           onClick={() => setShowAdd(true)}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow"
         >
-          Add Customer
+          Add Product
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg shadow p-4 border">
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading...</div>
-        ) : customers?.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">No customers yet.</div>
+        ) : products?.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            No products found.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-500 uppercase bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Phone</th>
-                  <th className="px-4 py-3">CNIC</th>
-                  <th className="px-4 py-3">Address</th>
-                  <th className="px-4 py-3">Reference</th>
+                  <th className="px-4 py-3">Product Name</th>
+                  <th className="px-4 py-3">Model</th>
+                  <th className="px-4 py-3">Price</th>
+                  <th className="px-4 py-3">Sale Price</th>
+                  <th className="px-4 py-3">Installments</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {customers.map((c) => (
+                {products.map((p) => (
                   <tr
-                    key={c._id || c.id}
+                    key={p.id}
                     className="border-b last:border-b-0 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => openDetails(c._id || c.id)} // OPEN DETAILS ON ROW CLICK
+                    onClick={() => openDetails(p.id)}
                   >
-                    <td className="px-4 py-3">{c.name}</td>
-                    <td className="px-4 py-3">{c.phone}</td>
-                    <td className="px-4 py-3">{c.cnic}</td>
-                    <td className="px-4 py-3 truncate max-w-[240px]">{c.address}</td>
-                    <td className="px-4 py-3">
-                      {c.reference_name || c.reference || ""}
-                      {c.reference_phone ? (
-                        <div className="text-xs text-gray-500">
-                          {c.reference_phone}
-                        </div>
-                      ) : null}
-                    </td>
+                    <td className="px-4 py-3">{p.product_name}</td>
+                    <td className="px-4 py-3">{p.model}</td>
+                    <td className="px-4 py-3">{p.price}</td>
+                    <td className="px-4 py-3">{p.sale_price}</td>
+                    <td className="px-4 py-3">{p.installment_duration || "-"}</td>
 
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
+
                         <button
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent row click
-                            setEditingId(c._id || c.id);
+                            e.stopPropagation();
+                            setEditingId(p.id);
                           }}
                           className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200"
                         >
@@ -115,16 +108,16 @@ export default function CustomerList() {
 
                         <button
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent row click
-                            handleDelete(c._id || c.id);
+                            e.stopPropagation();
+                            handleDelete(p.id);
                           }}
                           className="px-3 py-1 bg-red-100 text-red-800 rounded-md hover:bg-red-200"
                         >
                           Delete
                         </button>
+
                       </div>
                     </td>
-
                   </tr>
                 ))}
               </tbody>
@@ -134,43 +127,43 @@ export default function CustomerList() {
         )}
       </div>
 
-      {/* Add Customer Modal */}
+      {/* Add Product Modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-6 z-50">
           <div className="mt-12">
-            <AddCustomer
+            <AddProduct
               onClose={() => setShowAdd(false)}
               onSuccess={() => {
                 setShowAdd(false);
-                fetchCustomers();
+                fetchProducts();
               }}
             />
           </div>
         </div>
       )}
 
-      {/* Edit Customer Modal */}
+      {/* Edit Product Modal */}
       {editingId && (
         <div className="fixed inset-0 bg-black/40 flex items-start justify-center p-6 z-50">
-          <div className="mt-12 w-[720px]">
-            <EditCustomer
+          <div className="mt-12">
+            <EditProduct
               id={editingId}
               onCancel={() => setEditingId(null)}
               onSaved={() => {
                 setEditingId(null);
-                fetchCustomers();
+                fetchProducts();
               }}
             />
           </div>
         </div>
       )}
 
-      {/* Customer Details Modal */}
-      {showDetailsId && (
+      {/* Product Details Modal */}
+      {detailsId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-6 z-50">
-          <CustomerDetailsModal
-            id={showDetailsId}
-            onClose={() => setShowDetailsId(null)}
+          <ProductDetailsModal
+            id={detailsId}
+            onClose={() => setDetailsId(null)}
           />
         </div>
       )}
